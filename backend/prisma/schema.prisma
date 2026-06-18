@@ -1,0 +1,232 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  owner
+  manager
+  fabricator
+}
+
+enum ProjectStatus {
+  quoted
+  designing
+  fabricating
+  welding
+  finishing
+  installed
+  cancelled
+}
+
+enum ProjectType {
+  railing
+  gate
+  balcony
+  staircase
+  canopy
+  custom
+}
+
+enum MaterialStatus {
+  in_stock
+  low
+  reorder
+  out_of_stock
+}
+
+enum MaterialUnit {
+  bundle
+  sheet
+  coil
+  bar
+}
+
+enum SiteVisitStatus {
+  scheduled
+  completed
+  revision
+  approved
+  cancelled
+}
+
+enum MeasurementQuality {
+  excellent
+  good
+  needs_review
+  rejected
+}
+
+enum WeldingStatus {
+  scheduled
+  in_progress
+  completed
+  overdue
+}
+
+enum WeldingCategory {
+  mig
+  tig
+  arc
+  plasma
+  grinding
+  other
+}
+
+enum SurfaceCategory {
+  galvanizing
+  powder_coat
+  paint
+  patina
+  rust_proof
+  other
+}
+
+enum SurfaceStatus {
+  active
+  seasonal
+  discontinued
+}
+
+model Workshop {
+  id            String   @id @default(uuid())
+  name          String
+  phone         String?
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?  @map("zip_code")
+  totalStations Int      @default(4) @map("total_stations")
+  timezone      String   @default("Europe/Istanbul")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  users           User[]
+  projects        FabricationProject[]
+  materialStock   MaterialStock[]
+  siteVisits      SiteVisit[]
+  weldingTasks    WeldingTask[]
+  surfaceFinishes SurfaceFinish[]
+
+  @@map("workshops")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  role         UserRole @default(owner)
+  workshopId   String   @map("workshop_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  workshop Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+  @@map("users")
+}
+
+model FabricationProject {
+  id            String        @id @default(uuid())
+  workshopId    String        @map("workshop_id")
+  projectNumber String        @map("project_number")
+  clientName    String        @map("client_name")
+  projectType   ProjectType   @default(railing) @map("project_type")
+  quantity      Int?
+  status        ProjectStatus @default(quoted)
+  dueDate       DateTime?     @map("due_date") @db.Date
+  stationName   String?       @map("station_name")
+  notes         String?
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  workshop      Workshop        @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  siteVisits    SiteVisit[]
+  materialStock MaterialStock[]
+
+  @@unique([workshopId, projectNumber])
+  @@index([workshopId, status])
+  @@map("fabrication_projects")
+}
+
+model MaterialStock {
+  id            String         @id @default(uuid())
+  workshopId    String         @map("workshop_id")
+  projectId     String?        @map("project_id")
+  lotName       String         @map("lot_name")
+  materialGrade String?        @map("material_grade")
+  quantityKg    Float          @map("quantity_kg")
+  materialUnit  MaterialUnit   @default(bar) @map("material_unit")
+  status        MaterialStatus @default(in_stock)
+  receivedAt    DateTime?      @map("received_at") @db.Date
+  notes         String?
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  workshop Workshop            @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  project  FabricationProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([workshopId, status])
+  @@map("material_stock")
+}
+
+model SiteVisit {
+  id                 String             @id @default(uuid())
+  workshopId         String             @map("workshop_id")
+  projectId          String             @map("project_id")
+  visitedAt          DateTime           @map("visited_at")
+  measurementQuality MeasurementQuality @default(good) @map("measurement_quality")
+  revisionNotes      String?            @map("revision_notes")
+  status             SiteVisitStatus    @default(scheduled)
+  notes              String?
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  workshop Workshop           @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  project  FabricationProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([workshopId, status])
+  @@index([workshopId, visitedAt])
+  @@map("site_visits")
+}
+
+model WeldingTask {
+  id          String          @id @default(uuid())
+  workshopId  String          @map("workshop_id")
+  title       String
+  description String?
+  category    WeldingCategory @default(mig)
+  stationName String?         @map("station_name")
+  scheduledAt DateTime        @map("scheduled_at")
+  status      WeldingStatus   @default(scheduled)
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  workshop Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+  @@index([workshopId, scheduledAt])
+  @@map("welding_tasks")
+}
+
+model SurfaceFinish {
+  id              String          @id @default(uuid())
+  workshopId      String          @map("workshop_id")
+  title           String
+  surfaceCategory SurfaceCategory @default(galvanizing) @map("surface_category")
+  status          SurfaceStatus   @default(active)
+  pricePerSqm     Float           @map("price_per_sqm")
+  leadDays        Float?          @map("lead_days")
+  notes           String?
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  workshop Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+  @@index([workshopId, surfaceCategory])
+  @@map("surface_finishes")
+}

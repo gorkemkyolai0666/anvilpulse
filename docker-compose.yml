@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: anvilpulse
+      POSTGRES_PASSWORD: anvilpulse123
+      POSTGRES_DB: anvilpulse
+    ports:
+      - '5449:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U anvilpulse']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    ports:
+      - '4022:4022'
+    environment:
+      DATABASE_URL: postgresql://anvilpulse:anvilpulse123@postgres:5432/anvilpulse?schema=public
+      JWT_SECRET: anvilpulse-dev-secret
+      FRONTEND_URL: http://localhost:3022
+      PORT: 4022
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npm run deploy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - '3022:3022'
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4022/api
+    depends_on:
+      - backend

@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 36 33% 95%;
+    --foreground: 213 27% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 213 27% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 27% 15%;
+    --primary: 22 95% 46%;
+    --primary-foreground: 36 33% 95%;
+    --secondary: 213 27% 22%;
+    --secondary-foreground: 36 33% 95%;
+    --muted: 36 20% 90%;
+    --muted-foreground: 213 15% 40%;
+    --accent: 213 27% 22%;
+    --accent-foreground: 36 33% 95%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 45% 32%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 90% 52%;
+    --warning-foreground: 213 27% 15%;
+    --forge: 22 95% 46%;
+    --slate: 213 27% 22%;
+    --cream: 36 33% 95%;
+    --border: 213 20% 82%;
+    --input: 213 20% 82%;
+    --ring: 22 95% 46%;
+    --radius: 10px;
+  }
+
+  .dark {
+    --background: 213 27% 12%;
+    --foreground: 36 33% 95%;
+    --card: 213 27% 16%;
+    --card-foreground: 36 33% 95%;
+    --popover: 213 27% 16%;
+    --popover-foreground: 36 33% 95%;
+    --primary: 22 95% 50%;
+    --primary-foreground: 213 27% 12%;
+    --secondary: 36 33% 95%;
+    --secondary-foreground: 213 27% 12%;
+    --muted: 213 20% 20%;
+    --muted-foreground: 36 15% 65%;
+    --accent: 22 95% 50%;
+    --accent-foreground: 213 27% 12%;
+    --destructive: 0 62% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 40% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 85% 50%;
+    --warning-foreground: 213 27% 12%;
+    --border: 213 20% 25%;
+    --input: 213 20% 25%;
+    --ring: 22 95% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  h1, h2, h3, .font-display {
+    font-family: 'Bebas Neue', system-ui, sans-serif;
+    letter-spacing: 0.04em;
+  }
+}
+
+@layer components {
+  .ap-nav-rail-link {
+    @apply flex flex-col items-center gap-1 rounded-xl px-3 py-3 text-xs font-medium transition-colors;
+  }
+  .ap-nav-rail-link[data-active='true'] {
+    @apply bg-primary text-primary-foreground shadow-md;
+  }
+  .ap-nav-rail-link:not([data-active='true']) {
+    @apply text-muted-foreground hover:bg-muted hover:text-foreground;
+  }
+  .ap-card {
+    @apply rounded-xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md;
+  }
+  .ap-stat {
+    @apply rounded-xl border border-border bg-card p-4;
+  }
+  .ap-hero-gradient {
+    background: linear-gradient(135deg, hsl(var(--slate)) 0%, hsl(213 27% 18%) 50%, hsl(var(--forge) / 0.15) 100%);
+  }
+}
